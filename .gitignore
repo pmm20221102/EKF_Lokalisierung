@@ -1,0 +1,17 @@
+# 编译产物
+install/
+build/
+log/
+
+# Python 缓存
+__pycache__/
+*.pyc
+
+# 仿真器产生的临时文件
+.gazebo/
+*.sdf.erb
+
+# 操作系统文件
+.DS_Store
+.vscode/
+.idea/

@@ -1,0 +1,41 @@
+### ekf.yaml ###
+ekf_filter_node:
+  ros__parameters:
+    use_sim_time: true
+    frequency: 50.0
+    sensor_timeout: 0.1
+    two_d_mode: true
+
+    # 坐标系设置
+    map_frame: map              
+    odom_frame: odom            
+    base_link_frame: base_footprint
+    world_frame: odom           
+
+    # ----- 关键新增参数 -----
+    publish_tf: true             # 显式开启 TF 发布，确保 EKF 发布 odom -> base_footprint
+    # -----------------------
+
+    # 传感器 1：轮式里程计
+    odom0: /odom_raw  
+    odom0_config: [false, false, false, 
+                   false, false, false, 
+                   true,  true,  false, 
+                   false, false, true,  
+                   false, false, false]
+    odom0_differential: false
+    # 降低里程计的权重（加大噪声），因为它会打滑
+    odom0_pose_rejection_threshold: 5.0
+    odom0_velocity_rejection_threshold: 1.0
+
+    # 传感器 2：IMU
+    imu0: /imu
+    imu0_config: [false, false, false, 
+                  false, false, true,  # 相信 IMU 的 Yaw
+                  false, false, false, 
+                  false, false, true,  # 相信 IMU 的角速度
+                  true,  false, false]
+    imu0_differential: false
+    imu0_relative: true
+    # 提高 IMU 的权重（减小噪声），让转向更平滑
+    imu0_pose_rejection_threshold: 0.8

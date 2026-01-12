@@ -1,0 +1,62 @@
+ekf_filter_node:
+  ros__parameters:
+    use_sim_time: true
+    frequency: 50.0
+    sensor_timeout: 0.1
+    two_d_mode: true
+
+    # 坐标系设置
+    map_frame: map               
+    odom_frame: odom            
+    base_link_frame: base_footprint
+    world_frame: odom            # EKF 只负责到 odom 层级，map->odom 由 RTAB-Map 发布
+
+    publish_tf: true 
+
+    # ---------------------------------------------------------
+    # 传感器 1：轮式里程计 (ros2_control 提供)
+    # 只取其速度 (vx, vy)，不取位置以防打滑导致的位姿跳变
+    # ---------------------------------------------------------
+    odom0: /odom_raw  
+    odom0_config: [false, false, false, 
+                   false, false, false, 
+                   true,  true,  false, 
+                   false, false, false,  
+                   false, false, false]
+    odom0_differential: false
+    odom0_queue_size: 10
+
+    # ---------------------------------------------------------
+    # 传感器 2：IMU (imu_filter_madgwick 处理后)
+    # 提供关键的航向角 (Yaw) 和角速度
+    # ---------------------------------------------------------
+    imu0: /imu
+    imu0_config: [false, false, false, 
+                  false, false, true,   # 融合经过滤波后的姿态 (Yaw)
+                  false, false, false, 
+                  false, false, true,   # 融合角速度 (V_theta)
+                  false,  false, false]  # 融合线性加速度 (ax)
+    imu0_differential: false
+    imu0_relative: true                 # 设置为 true 以消除初始航向偏差
+    imu0_queue_size: 10
+
+    # ---------------------------------------------------------
+    # 传感器 3：视觉里程计 (RTAB-Map 提供)
+    # [新增] 视觉位姿能极大增强在打滑或斜坡环境下的定位稳健性
+    # ---------------------------------------------------------
+    odom1: /rtabmap/odom
+    odom1_config: [false, false, false,  # 相信视觉给出的 X, Y 位置
+                   false, false, false,   # 相信视觉给出的 Yaw 姿态
+                   true,  true,  false,  # 相信视觉给出的 vx, vy 速度
+                   false, false, false,   # 相信视觉给出的 v_theta 速度
+                   false, false, false]
+    odom1_differential: false            # VSLAM 输出通常已经是绝对增量
+    odom1_relative: false
+    odom1_queue_size: 10
+    # 设置拒绝阈值，防止视觉算法卡顿时产生瞬间位移跳变
+    odom1_pose_rejection_threshold: 0.2
+    odom1_velocity_rejection_threshold: 1.0
+    # ---------------------------------------------------------
+    # 过程噪声协方差 (Process Noise Covariance)
+    # 适当增加视觉数据相关的权重，让位姿更新更灵敏
+    # ---------------------------------------------------------
