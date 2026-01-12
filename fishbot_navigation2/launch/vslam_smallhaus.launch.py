@@ -86,7 +86,18 @@ def generate_launch_description():
                 ('imu', '/imu')
             ]
         ),
-
+        Node(
+                package='teleop_twist_keyboard',
+                executable='teleop_twist_keyboard',
+                name='teleop_node',
+                prefix='xterm -e', # 弹出独立终端
+                parameters=[{
+                    'stamped': True, # 开启时间戳适配 Jazzy 控制器
+                    'frame_id': 'base_link'
+                }],
+                remappings=[('/cmd_vel', '/cmd_vel')],
+                output='screen'
+            ),
         # --- E. RViz2 可视化 ---
         Node(
             package='rviz2',
